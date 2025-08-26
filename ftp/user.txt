@@ -1,0 +1,1 @@
+CTF{ftp_flag_here}

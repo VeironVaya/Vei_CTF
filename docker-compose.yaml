@@ -1,0 +1,12 @@
+services:
+  ftp:
+    build: ./ftp
+    container_name: ftp-ctf
+    ports:
+      - "21:21"      
+    networks:
+      - ctf-network
+
+networks:
+  ctf-network:
+    driver: bridge
