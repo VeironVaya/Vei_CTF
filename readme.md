@@ -1,20 +1,24 @@
-# CTF Challenge by Veiron Vaya Yarief 
+# CTF Challenge and Privilage Escalation Implementation by Veiron Vaya Yarief
 
 # Table of Contents
-- [CTF Challenge by Veiron Vaya Yarief](#ctf-challenge-by-veiron-vaya-yarief)
+- [CTF Challenge and Privilage Escalation Implementation by Veiron Vaya Yarief](#ctf-challenge-and-privilage-escalation-implementation-by-veiron-vaya-yarief)
 - [Table of Contents](#table-of-contents)
   - [1. How to try](#1-how-to-try)
   - [2. About Program](#2-about-program)
     - [2.1. Configuration](#21-configuration)
-    - [2.1.1. Ftp](#211-ftp)
-      - [Dockerfile](#dockerfile)
-      - [vsftpd.conf](#vsftpdconf)
-    - [2.1.2. Http](#212-http)
-      - [Dockerfile](#dockerfile-1)
-    - [2.1.3. MySql](#213-mysql)
-      - [init.sql](#initsql)
+      - [2.1.1. Ftp](#211-ftp)
+        - [Dockerfile](#dockerfile)
+        - [vsftpd.conf](#vsftpdconf)
+      - [2.1.2. Http](#212-http)
+        - [Dockerfile](#dockerfile-1)
+      - [2.1.3. MySql](#213-mysql)
+        - [init.sql](#initsql)
+    - [2.1.4. Network VPN](#214-network-vpn)
+      - [Lab VM (Kali-Linux) "Defender"](#lab-vm-kali-linux-defender)
+      - [VM (Ubuntu-Server) "Attacker"](#vm-ubuntu-server-attacker)
+      - [VM setup](#vm-setup)
     - [2.2. Write-Up/Solution](#22-write-upsolution)
-    - [2.3. Privilege Escalation](#23-privilege-escalation)
+    - [2.3. Privilege Escalation (Credential Hunting)](#23-privilege-escalation-credential-hunting)
 
 
 ## 1. How to try
@@ -38,15 +42,118 @@
 
 ### 2.1. Configuration
 
-### 2.1.1. Ftp
-#### Dockerfile
-#### vsftpd.conf
+#### 2.1.1. Ftp
+##### Dockerfile
+Purpose of this dockerfile is to build the ftp container and copy all necessary files to new directory
+```Dockerfile
+FROM debian:stable-slim
 
-### 2.1.2. Http
-#### Dockerfile
+RUN apt-get update && apt-get install -y vsftpd && rm -rf /var/lib/apt/lists/*
 
-### 2.1.3. MySql
-#### init.sql
+RUN mkdir -p /var/ftp
+COPY user.txt /var/ftp/
+COPY vsftpd.conf /etc/vsftpd.conf
+
+EXPOSE 21
+CMD ["/usr/sbin/vsftpd", "/etc/vsftpd.conf"]
+```
+
+
+##### vsftpd.conf
+Purpose of this configuration file is to tackle firewall issue with min-max port, and make it possible to exploit the anonymous login so does accesing the files
+
+```conf
+listen=YES
+anonymous_enable=YES
+local_enable=YES
+write_enable=YES
+anon_root=/var/ftp
+no_anon_password=YES
+hide_ids=YES
+
+# Passive mode settings
+pasv_enable=YES
+pasv_min_port=30000
+pasv_max_port=30009
+pasv_address=127.0.0.1
+```
+#### 2.1.2. Http
+##### Dockerfile
+```Dockerfile
+Purpose of this file is to make simple web app service using nginx
+
+FROM nginx:alpine
+COPY index.html /usr/share/nginx/html/index.html
+COPY .hidden /usr/share/nginx/html/.hidden
+
+
+```
+#### 2.1.3. MySql
+##### init.sql
+Purpose of this sql init is to make a database and most important is to setup the user that has spesific username and password to access
+```sql
+CREATE DATABASE IF NOT EXISTS ctfdb;
+
+USE ctfdb;
+
+CREATE TABLE IF NOT EXISTS flag (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    flag VARCHAR(255)
+);
+
+INSERT INTO flag (flag) VALUES ('CSM{CIAqzhxRqc}');
+
+-- create user
+CREATE USER 'dausmini'@'%' IDENTIFIED BY 'passnyadausmini' REQUIRE NONE;
+
+-- grant them access only to ctfdb
+GRANT ALL PRIVILEGES ON ctfdb.* TO 'dausmini'@'%';
+
+FLUSH PRIVILEGES;
+
+```
+
+### 2.1.4. Network VPN
+
+#### Lab VM (Kali-Linux) "Defender"
+This configuration is setted up in a Kali-Linux VM as the defender with 10.10.0.10 IP that can be accessible through WG's orchestrated network
+
+```conf
+[Interface]
+PrivateKey = mBkZCrrSWRTi16svzMg06wwl0p4sQdp0PcAg84CVO0s=
+Address = 10.10.0.10/32
+
+
+[Peer]
+PublicKey = LouF+35sYNUpsSA3J2SWLzMz/ZXLg+IfRXnpL/6w1TQ=
+Endpoint = 34.101.37.213:51820
+AllowedIPs = 10.10.0.0/24
+PersistentKeepalive = 25
+```
+#### VM (Ubuntu-Server) "Attacker"
+This configuration is setted up in a Ubunt-Server VM as the attacker with 10.10.0.11 IP that can be accessible through WG's orchestrated network
+```conf
+[Interface]
+PrivateKey = gNmawKCTR3TW7glKmmSymh2WYXa6E1wSKCsrYH3bJ3Q=
+Address = 10.10.0.11/32
+
+
+[Peer]
+PublicKey = LouF+35sYNUpsSA3J2SWLzMz/ZXLg+IfRXnpL/6w1TQ=
+Endpoint = 34.101.37.213:51820
+AllowedIPs = 10.10.0.0/24
+PersistentKeepalive = 25
+```
+
+#### VM setup
+
+On both VM according to its configuration files do:
+
+- Run command: `sudo apt update`
+- Run command: `sudo apt install wireguard resolvconf -y`
+- Run command: `sudo <CONFIGURATION FILE> /etc/wireguard/<CONFIGURATION FILE>`
+- Run command: `sudo chmod 600 /etc/wireguard/<CONFIGURATION FILE>`
+- Run command: `sudo wg-quick up <CONFIGURATION FILE>`
 
 ### 2.2. Write-Up/Solution
 - Disclaimer: change all the target ip to ur vm target ip
@@ -86,5 +193,22 @@
 - And we get our flag
 - Below is bonus documentation on simulation 2 VM
 ![alt text](assets/wu9.png)
-### 2.3. Privilege Escalation
+### 2.3. Privilege Escalation (Credential Hunting)
 
+- This is what usually happened, But imagine if the directory is all accesed like vader scenario's
+![alt text](assets/escal3.png)
+
+vader want to try credential hunting to find ucup's password:
+
+- Make user ucup: can do `sudo su` to go to root: `sudo adduser ucup` > `sudo usermod -aG sudo ucup` > 
+- Make user vader: can't do `sudo su`: `sudo adduser vader` > `sudo deluser vader sudo`
+![alt text](assets/escal2.png)
+![alt text](assets/escal1.png)
+- Make All-Accessed file and directory that store ucup's password: `echo "ucup123" > /home/ucup/passworducup.txt` > `chmod 644 /home/ucup/passworducup.txt` > `sudo chmod o+r /home/ucup/passworducup.txt`
+- Simulation as vader, try finding files with sensitive keyword `password` or `ucup`: `grep -Ri "ucup" /home/*`
+- See the sensitive files
+- Login as ucup
+- Run command `sudo su`
+- Now privilage escalated as root
+
+![alt text](assets/escal4.png)
