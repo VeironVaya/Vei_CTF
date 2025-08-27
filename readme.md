@@ -1,7 +1,7 @@
 # CTF Challenge and Privilage Escalation Implementation by Veiron Vaya Yarief
 
 # Table of Contents
-- [CTF Challenge and Privilage Escalation Implementation by Veiron Vaya Yarief](#ctf-challenge-and-privilege-escalation-implementation-by-veiron-vaya-yarief)
+- [CTF Challenge and Privilege Escalation Implementation by Veiron Vaya Yarief](#ctf-challenge-and-privilege-escalation-implementation-by-veiron-vaya-yarief)
 - [Table of Contents](#table-of-contents)
   - [1. How to try](#1-how-to-try)
   - [2. About Program](#2-about-program)
