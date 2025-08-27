@@ -8,9 +8,9 @@ services:
     networks:
       - ctf-network
 
-  www:
-    build: ./www
-    container_name: www-ctf
+  http:
+    build: ./http
+    container_name: http-ctf
     ports:
       - "80:80"      # HTTP
     networks:
