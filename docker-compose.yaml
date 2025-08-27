@@ -15,6 +15,20 @@ services:
       - "80:80"      # HTTP
     networks:
       - ctf-network
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-ctf
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: ctfdb
+      MYSQL_USER: dausmini
+      MYSQL_PASSWORD: passnyadausmini
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - ctf-network
 
 networks:
   ctf-network:
