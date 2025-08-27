@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS flag (
 INSERT INTO flag (flag) VALUES ('CSM{CIAqzhxRqc}');
 
 -- create user
-CREATE USER 'dausmini'@'%' IDENTIFIED BY 'passnyadausmini';
+CREATE USER 'dausmini'@'%' IDENTIFIED BY 'passnyadausmini' REQUIRE NONE;
 
 -- grant them access only to ctfdb
 GRANT ALL PRIVILEGES ON ctfdb.* TO 'dausmini'@'%';
