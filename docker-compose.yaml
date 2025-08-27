@@ -8,14 +8,14 @@ services:
     networks:
       - ctf-network
 
-  http:
-    build: ./http
-    container_name: http-ctf
+  www:
+    build: ./www
+    container_name: www-ctf
     ports:
       - "80:80"      # HTTP
     networks:
       - ctf-network
-      
+
 networks:
   ctf-network:
     driver: bridge
