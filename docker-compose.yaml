@@ -15,7 +15,7 @@ services:
       - "80:80"      # HTTP
     networks:
       - ctf-network
-      
+
 networks:
   ctf-network:
     driver: bridge
